@@ -70,7 +70,6 @@ func main() {
 							if err != nil {
 								log.Fatal(err)
 							}
-							//netatmo.RecordHumidity(ctx, restyClient, publisher, configDir)
 							netatmo.RecordMetrics(ctx, config)
 							return nil
 						},
@@ -86,7 +85,7 @@ func main() {
 }
 
 func initialize(_ context.Context, configDir string, redisAddr string, debug bool) (*backend.Config, error) {
-	// Confiugure the logger
+	// Configure the logger
 	var programLevel = new(slog.LevelVar)
 	h := slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: programLevel})
 	slog.SetDefault(slog.New(h))

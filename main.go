@@ -64,7 +64,7 @@ func main() {
 				Subcommands: []*cli.Command{
 					{
 						Name:  "record-metrics",
-						Usage: "Record metrics",
+						Usage: "Start metrics recording service",
 						Action: func(c *cli.Context) error {
 							config, err := initialize(ctx, configDir, redisAddress, debug)
 							if err != nil {

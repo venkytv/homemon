@@ -45,11 +45,12 @@ type NetatmoHomeCoachData struct {
 func RecordMetrics(ctx context.Context, config *backend.Config) {
 	// Get the access token
 	refreshTokenFile := path.Join(config.ConfigDir, NetatmoRefreshTokenFile)
-	accessToken, err := getAccessToken(ctx, config.RestyClient, refreshTokenFile)
+	accessToken, expiresIn, err := getAccessToken(ctx, config.RestyClient, refreshTokenFile)
 	if err != nil {
 		slog.Error("Error getting access token", "error", err)
 		os.Exit(1)
 	}
+	slog.Debug("Access Token", "expiresIn", expiresIn)
 
 	// Load mac IDs
 	configFile := path.Join(config.ConfigDir, NetatmoConfigFile)
@@ -60,8 +61,36 @@ func RecordMetrics(ctx context.Context, config *backend.Config) {
 		os.Exit(1)
 	}
 
+	// Record the initial metrics
+	recordMetricsRoutine(ctx, config, k, accessToken)
+
+	// Start the ticker to record metrics
+	metricsTicker := time.NewTicker(3 * time.Minute)
+
+	// Start the ticker to refresh the access token
+	accessTokenTicker := time.NewTicker(time.Duration(expiresIn-1800) * time.Second)
+
+	for {
+		select {
+		case <-metricsTicker.C:
+			slog.Debug("Recording metrics")
+			recordMetricsRoutine(ctx, config, k, accessToken)
+		case <-accessTokenTicker.C:
+			slog.Info("Refreshing access token")
+			accessToken, expiresIn, err = getAccessToken(ctx, config.RestyClient, refreshTokenFile)
+			if err != nil {
+				slog.Error("Error getting access token", "error", err)
+				os.Exit(1)
+			}
+		}
+	}
+}
+
+func recordMetricsRoutine(ctx context.Context, config *backend.Config, k *koanf.Koanf, accessToken string) {
+	// Load mac IDs
 	macIdMap := k.MustStringMap("mac-ids")
 
+	// Load metric ranges
 	var humitidyRanges, temperatureRanges, co2Ranges, noiseRanges []backend.Range
 	k.Unmarshal("metrics.humidity", &humitidyRanges)
 	k.Unmarshal("metrics.temperature", &temperatureRanges)
@@ -160,22 +189,22 @@ func RecordMetrics(ctx context.Context, config *backend.Config) {
 }
 
 // Get a new access token using the refresh token in file
-func getAccessToken(ctx context.Context, client *resty.Client, refreshTokenFile string) (string, error) {
+func getAccessToken(ctx context.Context, client *resty.Client, refreshTokenFile string) (string, int, error) {
 	refreshToken, err := readRefreshTokenFromFile(refreshTokenFile)
 	if err != nil {
-		return "", err
+		return "", 0, err
 	}
 	refreshTokenResponse, err := refreshAccessToken(ctx, client, refreshToken)
 	if err != nil {
-		return "", err
+		return "", 0, err
 	}
 
 	// Write the new refresh token to file
 	err = os.WriteFile(refreshTokenFile, []byte(refreshTokenResponse.RefreshToken), 0600)
 	if err != nil {
-		return "", err
+		return "", 0, err
 	}
-	return refreshTokenResponse.AccessToken, nil
+	return refreshTokenResponse.AccessToken, refreshTokenResponse.ExpiresIn, nil
 }
 
 // Read the refresh token from file

@@ -70,6 +70,9 @@ func RecordMetrics(ctx context.Context, config *backend.Config) {
 	// Start the ticker to refresh the access token
 	accessTokenTicker := time.NewTicker(time.Duration(expiresIn-1800) * time.Second)
 
+	// Start the ticker to run the cleanup routine
+	cleanupTicker := time.NewTicker(15 * time.Second)
+
 	for {
 		select {
 		case <-metricsTicker.C:
@@ -82,6 +85,9 @@ func RecordMetrics(ctx context.Context, config *backend.Config) {
 				slog.Error("Error getting access token", "error", err)
 				os.Exit(1)
 			}
+		case <-cleanupTicker.C:
+			slog.Debug("Cleaning up metrics")
+			backend.CleanupMetrics(ctx, config, false)
 		}
 	}
 }

@@ -76,6 +76,30 @@ func main() {
 					},
 				},
 			},
+			{
+				Name:  "cleanup",
+				Usage: "Cleanup commands",
+				Subcommands: []*cli.Command{
+					{
+						Name:  "metrics",
+						Usage: "Cleanup metrics in redis",
+						Flags: []cli.Flag{
+							&cli.BoolFlag{
+								Name:  "dry-run",
+								Usage: "Dry run",
+							},
+						},
+						Action: func(c *cli.Context) error {
+							config, err := initialize(ctx, configDir, redisAddress, debug)
+							if err != nil {
+								log.Fatal(err)
+							}
+							backend.CleanupMetrics(ctx, config, c.Bool("dry-run"))
+							return nil
+						},
+					},
+				},
+			},
 		},
 	}
 

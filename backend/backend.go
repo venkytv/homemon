@@ -11,3 +11,10 @@ type Config struct {
 	RedisClient *redis.Client
 	Publisher   *Publisher
 }
+
+type Range struct {
+	From     float64 `koanf:"from"`
+	To       float64 `koanf:"to"`
+	Priority int     `koanf:"priority"`
+	Colour   string  `koanf:"colour"`
+}

@@ -47,20 +47,26 @@ func RecordMetrics(ctx context.Context, config *backend.Config) {
 	refreshTokenFile := path.Join(config.ConfigDir, NetatmoRefreshTokenFile)
 	accessToken, err := getAccessToken(ctx, config.RestyClient, refreshTokenFile)
 	if err != nil {
-		fmt.Println(err)
+		slog.Error("Error getting access token", "error", err)
 		os.Exit(1)
 	}
 
 	// Load mac IDs
 	configFile := path.Join(config.ConfigDir, NetatmoConfigFile)
-	var koanf = koanf.New(".")
+	var k = koanf.New(".")
 
-	if err := koanf.Load(file.Provider(configFile), yaml.Parser()); err != nil {
-		fmt.Println(err)
+	if err := k.Load(file.Provider(configFile), yaml.Parser()); err != nil {
+		slog.Error("Error loading config file", "error", err)
 		os.Exit(1)
 	}
 
-	macIdMap := koanf.MustStringMap("mac-ids")
+	macIdMap := k.MustStringMap("mac-ids")
+
+	var humitidyRanges, temperatureRanges, co2Ranges, noiseRanges []backend.Range
+	k.Unmarshal("metrics.humidity", &humitidyRanges)
+	k.Unmarshal("metrics.temperature", &temperatureRanges)
+	k.Unmarshal("metrics.co2", &co2Ranges)
+	k.Unmarshal("metrics.noise", &noiseRanges)
 
 	// Build metrics generators for each room
 	var humidityMetricGeneratorMap = make(map[string]func(int, string) backend.Metric)
@@ -86,11 +92,11 @@ func RecordMetrics(ctx context.Context, config *backend.Config) {
 			SetResult(&homeCoachData).
 			Get("https://api.netatmo.com/api/gethomecoachsdata")
 		if err != nil {
-			fmt.Println(err)
+			slog.Error("Error getting home coach data", "error", err)
 			os.Exit(1)
 		}
 		if resp.IsError() {
-			fmt.Println("error: ", resp.Status(), string(resp.Body()))
+			slog.Error("Error getting home coach data", "error", resp.Status()+" "+string(resp.Body()))
 			os.Exit(1)
 		}
 		slog.Debug("Home Coach Data", "data", homeCoachData)
@@ -100,85 +106,54 @@ func RecordMetrics(ctx context.Context, config *backend.Config) {
 		// Generate metrics
 
 		// Humidity
-		var humidityMetric backend.Metric
-		switch {
-		case dashboardData.Humidity < 30:
-			// Too dry
-			humidityMetric = humidityMetricGeneratorMap[room](70, "red")
-		case dashboardData.Humidity > 70:
-			// Too humid
-			humidityMetric = humidityMetricGeneratorMap[room](80, "blue")
-		case dashboardData.Humidity > 60:
-			// Humid
-			humidityMetric = humidityMetricGeneratorMap[room](50, "lightblue")
-		}
-
-		if humidityMetric.Priority > 0 {
-			// Publish the metric
-			slog.Info("Publishing metric", "humidity", humidityMetric)
-			err = config.Publisher.Publish(ctx, humidityMetric)
-			if err != nil {
-				slog.Error("Error publishing metric", "error", err)
+		for _, metricRange := range humitidyRanges {
+			if float64(dashboardData.Humidity) >= metricRange.From && float64(dashboardData.Humidity) < metricRange.To {
+				humidityMetric := humidityMetricGeneratorMap[room](metricRange.Priority, metricRange.Colour)
+				slog.Info("Publishing metric", "humidity", humidityMetric)
+				err = config.Publisher.Publish(ctx, humidityMetric)
+				if err != nil {
+					slog.Error("Error publishing metric", "error", err)
+				}
+				break
 			}
 		}
 
 		// Temperature
-		var temperatureMetric backend.Metric
-		switch {
-		case dashboardData.Temperature < 17:
-			// Too cold
-			temperatureMetric = temperatureMetricGeneratorMap[room](40, "blue")
-		case dashboardData.Temperature > 24:
-			// Too hot
-			temperatureMetric = temperatureMetricGeneratorMap[room](45, "red")
-		}
-
-		if temperatureMetric.Priority > 0 {
-			// Publish the metric
-			slog.Info("Publishing metric", "temperature", temperatureMetric)
-			err = config.Publisher.Publish(ctx, temperatureMetric)
-			if err != nil {
-				slog.Error("Error publishing metric", "error", err)
+		for _, metricRange := range temperatureRanges {
+			if float64(dashboardData.Temperature) >= metricRange.From && float64(dashboardData.Temperature) < metricRange.To {
+				temperatureMetric := temperatureMetricGeneratorMap[room](metricRange.Priority, metricRange.Colour)
+				slog.Info("Publishing metric", "temperature", temperatureMetric)
+				err = config.Publisher.Publish(ctx, temperatureMetric)
+				if err != nil {
+					slog.Error("Error publishing metric", "error", err)
+				}
+				break
 			}
 		}
 
 		// CO2
-		var co2Metric backend.Metric
-		switch {
-		case dashboardData.CO2 > 1400:
-			// CO2 very high
-			co2Metric = co2MetricGeneratorMap[room](85, "red")
-		case dashboardData.CO2 > 1200:
-			// CO2 high
-			co2Metric = co2MetricGeneratorMap[room](75, "pink")
-		case dashboardData.CO2 > 900:
-			// CO2 slightly high
-			co2Metric = co2MetricGeneratorMap[room](25, "yellow")
-		}
-
-		if co2Metric.Priority > 0 {
-			// Publish the metric
-			slog.Info("Publishing metric", "co2", co2Metric)
-			err = config.Publisher.Publish(ctx, co2Metric)
-			if err != nil {
-				slog.Error("Error publishing metric", "error", err)
+		for _, metricRange := range co2Ranges {
+			if float64(dashboardData.CO2) >= metricRange.From && float64(dashboardData.CO2) < metricRange.To {
+				co2Metric := co2MetricGeneratorMap[room](metricRange.Priority, metricRange.Colour)
+				slog.Info("Publishing metric", "co2", co2Metric)
+				err = config.Publisher.Publish(ctx, co2Metric)
+				if err != nil {
+					slog.Error("Error publishing metric", "error", err)
+				}
+				break
 			}
 		}
 
 		// Noise
-		var noiseMetric backend.Metric
-		switch {
-		case dashboardData.Noise > 60:
-			// Noise high
-			noiseMetric = noiseMetricGeneratorMap[room](35, "yellow")
-		}
-
-		if noiseMetric.Priority > 0 {
-			// Publish the metric
-			slog.Info("Publishing metric", "noise", noiseMetric)
-			err = config.Publisher.Publish(ctx, noiseMetric)
-			if err != nil {
-				slog.Error("Error publishing metric", "error", err)
+		for _, metricRange := range noiseRanges {
+			if float64(dashboardData.Noise) >= metricRange.From && float64(dashboardData.Noise) < metricRange.To {
+				noiseMetric := noiseMetricGeneratorMap[room](metricRange.Priority, metricRange.Colour)
+				slog.Info("Publishing metric", "noise", noiseMetric)
+				err = config.Publisher.Publish(ctx, noiseMetric)
+				if err != nil {
+					slog.Error("Error publishing metric", "error", err)
+				}
+				break
 			}
 		}
 	}

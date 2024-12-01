@@ -1,0 +1,54 @@
+# ~/.config/homemon/netatmo-config.yaml
+
+mac-ids:
+  bedroom: 70:ee:12:34:56:78
+  livingroom: 70:ee:12:34:56:79
+
+metrics:
+  humidity:
+    # Too dry
+    - from: 0
+      to: 30
+      priority: 70
+      colour: red
+    # Slightly humid
+    - from: 60
+      to: 70
+      priority: 50
+      colour: lightblue
+    # Humid
+    - from: 70
+      to: 100
+      priority: 80
+      colour: blue
+
+  temperature:
+    - from: -100
+      to: 17
+      priority: 40
+      colour: blue
+    - from: 24
+      to: 100
+      priority: 45
+      colour: red
+
+  co2:
+    - from: 900
+      to: 1200
+      priority: 25
+      colour: yellow
+    - from: 1200
+      to: 1400
+      priority: 75
+      colour: pink
+    - from: 1400
+      to: 100000
+      priority: 85
+      colour: red
+
+  noise:
+    # Loud
+    - from: 60
+      to: 10000
+      priority: 35
+      colour: yellow

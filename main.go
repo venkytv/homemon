@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"log/slog"
 	"os"
@@ -114,8 +113,8 @@ func initialize(_ context.Context, configDir string, redisAddr string, debug boo
 	h := slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: programLevel})
 	slog.SetDefault(slog.New(h))
 	if debug {
-		fmt.Println("Setting log level to debug")
 		programLevel.Set(slog.LevelDebug)
+		slog.Debug("Debug mode enabled")
 	}
 
 	// Initialize the configuration directory

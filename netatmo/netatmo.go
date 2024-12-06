@@ -144,7 +144,7 @@ func recordMetricsRoutine(ctx context.Context, config *backend.Config, k *koanf.
 		for _, metricRange := range humitidyRanges {
 			if float64(dashboardData.Humidity) >= metricRange.From && float64(dashboardData.Humidity) < metricRange.To {
 				humidityMetric := humidityMetricGeneratorMap[room](metricRange.Priority, metricRange.Colour)
-				slog.Info("Publishing metric", "humidity", humidityMetric)
+				slog.Info("Publishing metric", "humidity", humidityMetric, "current", dashboardData.Humidity)
 				err = config.Publisher.Publish(ctx, humidityMetric)
 				if err != nil {
 					slog.Error("Error publishing metric", "error", err)
@@ -157,7 +157,7 @@ func recordMetricsRoutine(ctx context.Context, config *backend.Config, k *koanf.
 		for _, metricRange := range temperatureRanges {
 			if float64(dashboardData.Temperature) >= metricRange.From && float64(dashboardData.Temperature) < metricRange.To {
 				temperatureMetric := temperatureMetricGeneratorMap[room](metricRange.Priority, metricRange.Colour)
-				slog.Info("Publishing metric", "temperature", temperatureMetric)
+				slog.Info("Publishing metric", "temperature", temperatureMetric, "current", dashboardData.Temperature)
 				err = config.Publisher.Publish(ctx, temperatureMetric)
 				if err != nil {
 					slog.Error("Error publishing metric", "error", err)
@@ -170,7 +170,7 @@ func recordMetricsRoutine(ctx context.Context, config *backend.Config, k *koanf.
 		for _, metricRange := range co2Ranges {
 			if float64(dashboardData.CO2) >= metricRange.From && float64(dashboardData.CO2) < metricRange.To {
 				co2Metric := co2MetricGeneratorMap[room](metricRange.Priority, metricRange.Colour)
-				slog.Info("Publishing metric", "co2", co2Metric)
+				slog.Info("Publishing metric", "co2", co2Metric, "current", dashboardData.CO2)
 				err = config.Publisher.Publish(ctx, co2Metric)
 				if err != nil {
 					slog.Error("Error publishing metric", "error", err)
@@ -183,7 +183,7 @@ func recordMetricsRoutine(ctx context.Context, config *backend.Config, k *koanf.
 		for _, metricRange := range noiseRanges {
 			if float64(dashboardData.Noise) >= metricRange.From && float64(dashboardData.Noise) < metricRange.To {
 				noiseMetric := noiseMetricGeneratorMap[room](metricRange.Priority, metricRange.Colour)
-				slog.Info("Publishing metric", "noise", noiseMetric)
+				slog.Info("Publishing metric", "noise", noiseMetric, "current", dashboardData.Noise)
 				err = config.Publisher.Publish(ctx, noiseMetric)
 				if err != nil {
 					slog.Error("Error publishing metric", "error", err)

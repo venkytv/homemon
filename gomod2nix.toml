@@ -1,0 +1,60 @@
+schema = 3
+
+[mod]
+  [mod."github.com/cespare/xxhash/v2"]
+    version = "v2.2.0"
+    hash = "sha256-nPufwYQfTkyrEkbBrpqM3C2vnMxfIz6tAaBmiUP7vd4="
+  [mod."github.com/cpuguy83/go-md2man/v2"]
+    version = "v2.0.5"
+    hash = "sha256-UX9FajFqZApVFED3MYcq167iPwztnIck25ehfcOeFD8="
+  [mod."github.com/dgryski/go-rendezvous"]
+    version = "v0.0.0-20200823014737-9f7001d12a5f"
+    hash = "sha256-n/7xo5CQqo4yLaWMSzSN1Muk/oqK6O5dgDOFWapeDUI="
+  [mod."github.com/fsnotify/fsnotify"]
+    version = "v1.7.0"
+    hash = "sha256-MdT2rQyQHspPJcx6n9ozkLbsktIOJutOqDuKpNAtoZY="
+  [mod."github.com/go-resty/resty/v2"]
+    version = "v2.16.0"
+    hash = "sha256-IoXwZwYZ19tQQ8JJdd2C3+yz/H2plmydCAUpjUN/7m4="
+  [mod."github.com/go-viper/mapstructure/v2"]
+    version = "v2.2.1"
+    hash = "sha256-3BcbxiZQp3eglk+vaYnRIDGT4dQ9K8aLrTPODbToI/Q="
+  [mod."github.com/knadh/koanf/maps"]
+    version = "v0.1.1"
+    hash = "sha256-tUjNmbUFArrbblgjAqqiqAd6jRS8lE6LY98x/9yTS6k="
+  [mod."github.com/knadh/koanf/parsers/yaml"]
+    version = "v0.1.0"
+    hash = "sha256-HqR4mBD6esxht5eC7hmO5SYC0jWwTYVzd7PrCtIXcNY="
+  [mod."github.com/knadh/koanf/providers/file"]
+    version = "v1.1.2"
+    hash = "sha256-7j88I3bnXBnFn3FjgsAwmjtW4WdpBTTs3zk22Gzu1o8="
+  [mod."github.com/knadh/koanf/v2"]
+    version = "v2.1.2"
+    hash = "sha256-g6GneudT1prBdKSofPuQJFvVcc6nYBJrmwfcpLWsWxQ="
+  [mod."github.com/mitchellh/copystructure"]
+    version = "v1.2.0"
+    hash = "sha256-VR9cPZvyW62IHXgmMw8ee+hBDThzd2vftgPksQYR/Mc="
+  [mod."github.com/mitchellh/reflectwalk"]
+    version = "v1.0.2"
+    hash = "sha256-VX9DPqChm7jPnyrA3RAYgxAFrAhj7TRKIWD/qR9Zr9s="
+  [mod."github.com/redis/go-redis/v9"]
+    version = "v9.7.0"
+    hash = "sha256-lpEMK1jBuwrIY7nrk5f9Ru4Y2FXDU4FxlVjXHjV5Ahc="
+  [mod."github.com/russross/blackfriday/v2"]
+    version = "v2.1.0"
+    hash = "sha256-R+84l1si8az5yDqd5CYcFrTyNZ1eSYlpXKq6nFt4OTQ="
+  [mod."github.com/urfave/cli/v2"]
+    version = "v2.27.5"
+    hash = "sha256-b/mERhhQ7CHxVEyf2QXfVnZut9pgMMVgL4zs2Wh9s4A="
+  [mod."github.com/xrash/smetrics"]
+    version = "v0.0.0-20240521201337-686a1a2994c1"
+    hash = "sha256-CsyN59w6sKERDI5kkdpq0YKmqdixyCHuN4FYE/56/BQ="
+  [mod."golang.org/x/net"]
+    version = "v0.27.0"
+    hash = "sha256-GrlN5isYeEVrPZVAHK0MDQatttbnyfSPoWJHj0xqhjk="
+  [mod."golang.org/x/sys"]
+    version = "v0.22.0"
+    hash = "sha256-RbG0XaXGGlErCsl2agvUxMnrkRwdbJLmriYT1H24FwA="
+  [mod."gopkg.in/yaml.v3"]
+    version = "v3.0.1"
+    hash = "sha256-FqL9TKYJ0XkNwJFnq9j0VvJ5ZUU1RvH/52h/f5bkYAU="

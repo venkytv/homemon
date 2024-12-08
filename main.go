@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"log/slog"
 	"os"
@@ -70,6 +71,77 @@ func main() {
 								log.Fatal(err)
 							}
 							netatmo.RecordMetrics(ctx, config)
+							return nil
+						},
+					},
+				},
+			},
+			{
+				Name:  "metrics",
+				Usage: "Metrics commands",
+				Subcommands: []*cli.Command{
+					{
+						Name:  "publish",
+						Usage: "Publish a metric",
+						Flags: []cli.Flag{
+							&cli.StringFlag{
+								Name:     "name",
+								Aliases:  []string{"n"},
+								Usage:    "Name of the metric",
+								Required: true,
+							},
+							&cli.IntFlag{
+								Name:     "priority",
+								Aliases:  []string{"p"},
+								Usage:    "Priority of the metric",
+								Required: true,
+							},
+							&cli.StringFlag{
+								Name:     "colour",
+								Aliases:  []string{"c"},
+								Usage:    "Colour of the metric",
+								Required: true,
+							},
+							&cli.DurationFlag{
+								Name:     "ttl",
+								Aliases:  []string{"t"},
+								Usage:    "Time to live of the metric",
+								Required: true,
+							},
+						},
+						Action: func(c *cli.Context) error {
+							config, err := initialize(ctx, configDir, redisAddress, debug)
+							if err != nil {
+								log.Fatal(err)
+							}
+							metric := backend.Metric{
+								Name:     c.String("name"),
+								Priority: c.Int("priority"),
+								Colour:   c.String("colour"),
+								TTL:      time.Now().Add(c.Duration("ttl")),
+							}
+							slog.Debug("Publishing metric", "metric", metric)
+							if err := config.Publisher.Publish(ctx, metric); err != nil {
+								log.Fatal(err)
+							}
+							return nil
+						},
+					},
+					{
+						Name:  "list",
+						Usage: "List metrics",
+						Action: func(c *cli.Context) error {
+							config, err := initialize(ctx, configDir, redisAddress, debug)
+							if err != nil {
+								log.Fatal(err)
+							}
+							metrics, err := config.Publisher.ListMetrics(ctx, config)
+							if err != nil {
+								log.Fatal(err)
+							}
+							for _, metric := range metrics {
+								fmt.Printf("%s: priority: %d, colour: %s, ttl: %s\n", metric.Name, metric.Priority, metric.Colour, metric.TTL)
+							}
 							return nil
 						},
 					},

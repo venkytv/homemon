@@ -65,3 +65,37 @@ func (p *Publisher) Publish(ctx context.Context, metric Metric) error {
 
 	return nil
 }
+
+// List metrics
+func (p *Publisher) ListMetrics(ctx context.Context, config *Config) ([]Metric, error) {
+	// Get all metrics
+	priority_key := p.prefix + ":priority"
+	colour_key := p.prefix + ":colour"
+	ttl_key := p.prefix + ":ttl"
+	metrics := []Metric{}
+	members, err := p.redisClient.ZRange(ctx, priority_key, 0, -1).Result()
+	if err != nil {
+		return nil, err
+	}
+	for _, member := range members {
+		colour, err := p.redisClient.HGet(ctx, colour_key, member).Result()
+		if err != nil {
+			return nil, err
+		}
+		priority, err := p.redisClient.ZScore(ctx, priority_key, member).Result()
+		if err != nil {
+			return nil, err
+		}
+		score, err := p.redisClient.ZScore(ctx, ttl_key, member).Result()
+		if err != nil {
+			return nil, err
+		}
+		metrics = append(metrics, Metric{
+			Name:     member,
+			Priority: int(priority),
+			Colour:   colour,
+			TTL:      time.Unix(int64(score), 0),
+		})
+	}
+	return metrics, nil
+}

@@ -73,29 +73,32 @@ func (p *Publisher) ListMetrics(ctx context.Context, config *Config) ([]Metric, 
 	colour_key := p.prefix + ":colour"
 	ttl_key := p.prefix + ":ttl"
 	metrics := []Metric{}
-	members, err := p.redisClient.ZRange(ctx, priority_key, 0, -1).Result()
+
+	// Get all members with scores ordered by priority in reverse order
+	members, err := p.redisClient.ZRevRangeByScoreWithScores(ctx, priority_key, &redis.ZRangeBy{
+		Min: "-inf",
+		Max: "+inf",
+	}).Result()
 	if err != nil {
 		return nil, err
 	}
 	for _, member := range members {
-		colour, err := p.redisClient.HGet(ctx, colour_key, member).Result()
+		colour, err := p.redisClient.HGet(ctx, colour_key, member.Member.(string)).Result()
 		if err != nil {
 			return nil, err
 		}
-		priority, err := p.redisClient.ZScore(ctx, priority_key, member).Result()
-		if err != nil {
-			return nil, err
-		}
-		score, err := p.redisClient.ZScore(ctx, ttl_key, member).Result()
+		priority := int(member.Score)
+		ttl, err := p.redisClient.ZScore(ctx, ttl_key, member.Member.(string)).Result()
 		if err != nil {
 			return nil, err
 		}
 		metrics = append(metrics, Metric{
-			Name:     member,
-			Priority: int(priority),
+			Name:     member.Member.(string),
+			Priority: priority,
 			Colour:   colour,
-			TTL:      time.Unix(int64(score), 0),
+			TTL:      time.Unix(int64(ttl), 0),
 		})
 	}
+
 	return metrics, nil
 }

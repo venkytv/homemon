@@ -2,6 +2,7 @@ package backend
 
 import (
 	"context"
+	"log"
 	"time"
 
 	"github.com/redis/go-redis/v9"
@@ -101,4 +102,33 @@ func (p *Publisher) ListMetrics(ctx context.Context, config *Config) ([]Metric, 
 	}
 
 	return metrics, nil
+}
+
+// Delete metric
+func (p *Publisher) DeleteMetric(ctx context.Context, name string) error {
+	// Ensure metric exists
+	priority_key := p.prefix + ":priority"
+	if _, err := p.redisClient.ZRank(ctx, priority_key, name).Result(); err != nil {
+		// Metric does not exist
+		log.Fatalf("Metric %s does not exist", name)
+	}
+
+	// Delete priority
+	if err := p.redisClient.ZRem(ctx, priority_key, name).Err(); err != nil {
+		return err
+	}
+
+	// Delete colour
+	colour_key := p.prefix + ":colour"
+	if err := p.redisClient.HDel(ctx, colour_key, name).Err(); err != nil {
+		return err
+	}
+
+	// Delete TTL
+	ttl_key := p.prefix + ":ttl"
+	if err := p.redisClient.ZRem(ctx, ttl_key, name).Err(); err != nil {
+		return err
+	}
+
+	return nil
 }

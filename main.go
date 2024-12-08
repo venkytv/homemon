@@ -145,6 +145,24 @@ func main() {
 							return nil
 						},
 					},
+					{
+						Name:  "delete",
+						Usage: "Delete a metric",
+						Action: func(c *cli.Context) error {
+							name := c.Args().First()
+							if name == "" {
+								log.Fatal("Name of the metric is required")
+							}
+							config, err := initialize(ctx, configDir, redisAddress, debug)
+							if err != nil {
+								log.Fatal(err)
+							}
+							if err := config.Publisher.DeleteMetric(ctx, name); err != nil {
+								log.Fatal(err)
+							}
+							return nil
+						},
+					},
 				},
 			},
 			{

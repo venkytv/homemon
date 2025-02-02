@@ -20,6 +20,7 @@ import (
 const (
 	NetatmoRefreshTokenFile = "netatmo-refresh-token"
 	NetatmoConfigFile       = "netatmo-config.yaml"
+	DeviceID                = "netatmo"
 )
 
 type RefreshTokenResponse struct {
@@ -137,6 +138,42 @@ func recordMetricsRoutine(ctx context.Context, config *backend.Config, k *koanf.
 		slog.Debug("Home Coach Data", "data", homeCoachData)
 
 		dashboardData := homeCoachData.Body.Devices[0].DashboardData
+
+		// Publish raw metrics
+		rawMetrics := []backend.RawMetric{
+			{
+				Name:     "sensor.environmental.temperature",
+				DeviceID: DeviceID,
+				Location: room,
+				Value:    dashboardData.Temperature,
+			},
+			{
+				Name:     "sensor.environmental.humidity",
+				DeviceID: DeviceID,
+				Location: room,
+				Value:    float64(dashboardData.Humidity),
+			},
+			{
+				Name:     "sensor.environmental.co2",
+				DeviceID: DeviceID,
+				Location: room,
+				Value:    float64(dashboardData.CO2),
+			},
+			{
+				Name:     "sensor.acoustic.noise",
+				DeviceID: DeviceID,
+				Location: room,
+				Value:    float64(dashboardData.Noise),
+			},
+		}
+
+		for _, rawMetric := range rawMetrics {
+			slog.Info("Publishing raw metric", "metric", rawMetric)
+			err = config.RawPublisher.Publish(ctx, rawMetric)
+			if err != nil {
+				slog.Error("Error publishing raw metric", "error", err)
+			}
+		}
 
 		// Generate metrics
 

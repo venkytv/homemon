@@ -6,10 +6,11 @@ import (
 )
 
 type Config struct {
-	ConfigDir   string
-	RestyClient *resty.Client
-	RedisClient *redis.Client
-	Publisher   *Publisher
+	ConfigDir    string
+	RestyClient  *resty.Client
+	RedisClient  *redis.Client
+	Publisher    *Publisher
+	RawPublisher *RawPublisher
 }
 
 type Range struct {

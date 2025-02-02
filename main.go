@@ -31,6 +31,7 @@ func main() {
 
 	var configDir string
 	var redisAddress string
+	var natsAddress string
 	var debug bool
 
 	app := &cli.App{
@@ -50,6 +51,12 @@ func main() {
 				Value:       "localhost:6379",
 				Destination: &redisAddress,
 			},
+			&cli.StringFlag{
+				Name:        "nats-address",
+				Usage:       "NATS address",
+				Value:       "localhost:4222",
+				Destination: &natsAddress,
+			},
 			&cli.BoolFlag{
 				Name:        "debug",
 				Usage:       "Enable debug mode",
@@ -66,7 +73,7 @@ func main() {
 						Name:  "record-metrics",
 						Usage: "Start metrics recording service",
 						Action: func(c *cli.Context) error {
-							config, err := initialize(ctx, configDir, redisAddress, debug)
+							config, err := initialize(ctx, configDir, redisAddress, natsAddress, debug)
 							if err != nil {
 								log.Fatal(err)
 							}
@@ -110,7 +117,7 @@ func main() {
 							},
 						},
 						Action: func(c *cli.Context) error {
-							config, err := initialize(ctx, configDir, redisAddress, debug)
+							config, err := initialize(ctx, configDir, redisAddress, natsAddress, debug)
 							if err != nil {
 								log.Fatal(err)
 							}
@@ -131,7 +138,7 @@ func main() {
 						Name:  "list",
 						Usage: "List metrics",
 						Action: func(c *cli.Context) error {
-							config, err := initialize(ctx, configDir, redisAddress, debug)
+							config, err := initialize(ctx, configDir, redisAddress, natsAddress, debug)
 							if err != nil {
 								log.Fatal(err)
 							}
@@ -153,7 +160,7 @@ func main() {
 							if name == "" {
 								log.Fatal("Name of the metric is required")
 							}
-							config, err := initialize(ctx, configDir, redisAddress, debug)
+							config, err := initialize(ctx, configDir, redisAddress, natsAddress, debug)
 							if err != nil {
 								log.Fatal(err)
 							}
@@ -179,7 +186,7 @@ func main() {
 							},
 						},
 						Action: func(c *cli.Context) error {
-							config, err := initialize(ctx, configDir, redisAddress, debug)
+							config, err := initialize(ctx, configDir, redisAddress, natsAddress, debug)
 							if err != nil {
 								log.Fatal(err)
 							}
@@ -197,7 +204,7 @@ func main() {
 	}
 }
 
-func initialize(_ context.Context, configDir string, redisAddr string, debug bool) (*backend.Config, error) {
+func initialize(_ context.Context, configDir string, redisAddr, natsAddr string, debug bool) (*backend.Config, error) {
 	// Configure the logger
 	var programLevel = new(slog.LevelVar)
 	h := slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: programLevel})
@@ -231,6 +238,13 @@ func initialize(_ context.Context, configDir string, redisAddr string, debug boo
 
 	// Initialize the publisher
 	config.Publisher = backend.NewPublisher(redisAddr, Prefix)
+
+	// Initialize the NATS client
+	natsPublisher, err := backend.NewNATSPublisher(natsAddr)
+	if err != nil {
+		return nil, err
+	}
+	config.RawPublisher = natsPublisher
 
 	return config, nil
 }

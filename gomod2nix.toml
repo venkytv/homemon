@@ -19,6 +19,9 @@ schema = 3
   [mod."github.com/go-viper/mapstructure/v2"]
     version = "v2.2.1"
     hash = "sha256-3BcbxiZQp3eglk+vaYnRIDGT4dQ9K8aLrTPODbToI/Q="
+  [mod."github.com/klauspost/compress"]
+    version = "v1.17.9"
+    hash = "sha256-FxHk4OuwsbiH1OLI+Q0oA4KpcOB786sEfik0G+GNoow="
   [mod."github.com/knadh/koanf/maps"]
     version = "v0.1.1"
     hash = "sha256-tUjNmbUFArrbblgjAqqiqAd6jRS8lE6LY98x/9yTS6k="
@@ -37,6 +40,15 @@ schema = 3
   [mod."github.com/mitchellh/reflectwalk"]
     version = "v1.0.2"
     hash = "sha256-VX9DPqChm7jPnyrA3RAYgxAFrAhj7TRKIWD/qR9Zr9s="
+  [mod."github.com/nats-io/nats.go"]
+    version = "v1.38.0"
+    hash = "sha256-GgXODq+9qsjQVktYa+sbbZ//CraUxwGNfrzGloarz84="
+  [mod."github.com/nats-io/nkeys"]
+    version = "v0.4.9"
+    hash = "sha256-5HmtCzY2EmlnBqg36JcjaaM2ivrM5f719bkWqpxekVI="
+  [mod."github.com/nats-io/nuid"]
+    version = "v1.0.1"
+    hash = "sha256-7wddxVz3hnFg/Pf+61+MtQJJL/l8EaC8brHoNsmD64c="
   [mod."github.com/redis/go-redis/v9"]
     version = "v9.7.0"
     hash = "sha256-lpEMK1jBuwrIY7nrk5f9Ru4Y2FXDU4FxlVjXHjV5Ahc="
@@ -49,12 +61,15 @@ schema = 3
   [mod."github.com/xrash/smetrics"]
     version = "v0.0.0-20240521201337-686a1a2994c1"
     hash = "sha256-CsyN59w6sKERDI5kkdpq0YKmqdixyCHuN4FYE/56/BQ="
+  [mod."golang.org/x/crypto"]
+    version = "v0.31.0"
+    hash = "sha256-ZBjoG7ZOuTEmjaXPP9txAvjAjC46DeaLs0zrNzi8EQw="
   [mod."golang.org/x/net"]
     version = "v0.27.0"
     hash = "sha256-GrlN5isYeEVrPZVAHK0MDQatttbnyfSPoWJHj0xqhjk="
   [mod."golang.org/x/sys"]
-    version = "v0.22.0"
-    hash = "sha256-RbG0XaXGGlErCsl2agvUxMnrkRwdbJLmriYT1H24FwA="
+    version = "v0.28.0"
+    hash = "sha256-kzSlDo5FKsQU9cLefIt2dueGUfz9XuEW+mGSGlPATGc="
   [mod."gopkg.in/yaml.v3"]
     version = "v3.0.1"
     hash = "sha256-FqL9TKYJ0XkNwJFnq9j0VvJ5ZUU1RvH/52h/f5bkYAU="

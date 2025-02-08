@@ -242,7 +242,9 @@ func initialize(_ context.Context, configDir string, redisAddr, natsAddr string,
 	// Initialize the NATS client
 	natsPublisher, err := backend.NewNATSPublisher(natsAddr)
 	if err != nil {
-		return nil, err
+		// Disable NATS publisher if it fails to initialize
+		slog.Warn("Failed to initialize NATS publisher", "error", err)
+		natsPublisher = nil
 	}
 	config.RawPublisher = natsPublisher
 

@@ -151,15 +151,28 @@ Purges expired metrics from the database. A dry-run option is available to previ
 
 Homemon utilizes the Netatmo API, which requires OAuth tokens. Refresh tokens are stored securely and used to obtain access tokens. The tokens are refreshed automatically by `homemon` as needed.
 
+For NetAtmo, you need to do the following:
+1. Create a developer account: https://dev.netatmo.com/apidocumentation
+2. Create an application: https://dev.netatmo.com/apps/createanapp#form
+
+Once the app is created, you need the client ID, client secret, and the refresh token. (You can ignore the access token. `homemon` will use the refresh token to create a new access token.)
+
 ## Configuration
 
 Configuration files define how `homemon` interacts with various services and manage internal data. Key files such as `netatmo-config.yaml` store mappings of rooms to device IDs and define metric thresholds.
 
-Environment variables `NETATMO_CLIENT_ID` and `NETATMO_CLIENT_SECRET` must be set for OAuth handling.
+Environment variables `NETATMO_CLIENT_ID` and `NETATMO_CLIENT_SECRET` must be set for OAuth handling. Also, the refresh token should be saved in the file: `~/.config/homemon/netatmo-refresh-token`:
+
+```bash
+$ cat ~/.config/homemon/netatmo-refresh-token
+678abc123|def64775...
+```
 
 ## Sample Configuration File
 
-Here's an example configuration file `netatmo-config.yaml` that you might include in your configuration directory (`~/.config/homemon`):
+Here's an example configuration file `netatmo-config.yaml` that you need to include in your configuration directory (`~/.config/homemon`):
+
+(You can get the MAC addresses for your NetAtmo Indoor Air Quality Monitor from your "Home Coach" app. Look in "Settings > Advanced Settings > Your Device".)
 
 ```yaml
 mac-ids:

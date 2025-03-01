@@ -17,16 +17,21 @@ type RawMetric struct {
 // RawPublisher publishes raw metrics to NATS
 type RawPublisher struct {
 	natsClient *nats.Conn
+	natsPrefix string
 }
 
 // NewNATSPublisher creates a new NATSPublisher
-func NewNATSPublisher(address string) (*RawPublisher, error) {
+func NewNATSPublisher(address string, prefix string) (*RawPublisher, error) {
 	natsClient, err := nats.Connect(address)
 	if err != nil {
 		return nil, err
 	}
+	if len(prefix) > 0 {
+		prefix += "."
+	}
 	return &RawPublisher{
 		natsClient: natsClient,
+		natsPrefix: prefix,
 	}, nil
 }
 
@@ -37,5 +42,6 @@ func (p *RawPublisher) Publish(ctx context.Context, metric RawMetric) error {
 		return err
 	}
 
-	return p.natsClient.Publish(metric.Name, data)
+	name := p.natsPrefix + metric.Name
+	return p.natsClient.Publish(name, data)
 }

@@ -20,6 +20,15 @@ const (
 	Prefix = "homemon"
 )
 
+type GlobalFlags struct {
+	configDir    string
+	redisAddress string
+	redisPrefix  string
+	natsAddress  string
+	natsPrefix   string
+	debug        bool
+}
+
 func main() {
 
 	ctx := context.Background()
@@ -29,10 +38,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	var configDir string
-	var redisAddress string
-	var natsAddress string
-	var debug bool
+	input := GlobalFlags{}
 
 	app := &cli.App{
 		Name:  "homemon",
@@ -43,25 +49,37 @@ func main() {
 				Usage:       "Configuration directory",
 				Value:       homeDir + "/.config/homemon",
 				TakesFile:   true,
-				Destination: &configDir,
+				Destination: &input.configDir,
 			},
 			&cli.StringFlag{
 				Name:        "redis-address",
 				Usage:       "Redis address",
 				Value:       "localhost:6379",
-				Destination: &redisAddress,
+				Destination: &input.redisAddress,
+			},
+			&cli.StringFlag{
+				Name:        "redis-prefix",
+				Usage:       "Prefix for redis keys",
+				Value:       "",
+				Destination: &input.redisPrefix,
 			},
 			&cli.StringFlag{
 				Name:        "nats-address",
 				Usage:       "NATS address",
 				Value:       "localhost:4222",
-				Destination: &natsAddress,
+				Destination: &input.natsAddress,
+			},
+			&cli.StringFlag{
+				Name:        "nats-prefix",
+				Usage:       "Prefix for NATS subjects",
+				Value:       "",
+				Destination: &input.natsPrefix,
 			},
 			&cli.BoolFlag{
 				Name:        "debug",
 				Usage:       "Enable debug mode",
 				Value:       false,
-				Destination: &debug,
+				Destination: &input.debug,
 			},
 		},
 		Commands: []*cli.Command{
@@ -73,7 +91,7 @@ func main() {
 						Name:  "record-metrics",
 						Usage: "Start metrics recording service",
 						Action: func(c *cli.Context) error {
-							config, err := initialize(ctx, configDir, redisAddress, natsAddress, debug)
+							config, err := initialize(ctx, input)
 							if err != nil {
 								log.Fatal(err)
 							}
@@ -117,7 +135,7 @@ func main() {
 							},
 						},
 						Action: func(c *cli.Context) error {
-							config, err := initialize(ctx, configDir, redisAddress, natsAddress, debug)
+							config, err := initialize(ctx, input)
 							if err != nil {
 								log.Fatal(err)
 							}
@@ -138,7 +156,7 @@ func main() {
 						Name:  "list",
 						Usage: "List metrics",
 						Action: func(c *cli.Context) error {
-							config, err := initialize(ctx, configDir, redisAddress, natsAddress, debug)
+							config, err := initialize(ctx, input)
 							if err != nil {
 								log.Fatal(err)
 							}
@@ -160,7 +178,7 @@ func main() {
 							if name == "" {
 								log.Fatal("Name of the metric is required")
 							}
-							config, err := initialize(ctx, configDir, redisAddress, natsAddress, debug)
+							config, err := initialize(ctx, input)
 							if err != nil {
 								log.Fatal(err)
 							}
@@ -186,7 +204,7 @@ func main() {
 							},
 						},
 						Action: func(c *cli.Context) error {
-							config, err := initialize(ctx, configDir, redisAddress, natsAddress, debug)
+							config, err := initialize(ctx, input)
 							if err != nil {
 								log.Fatal(err)
 							}
@@ -204,43 +222,48 @@ func main() {
 	}
 }
 
-func initialize(_ context.Context, configDir string, redisAddr, natsAddr string, debug bool) (*backend.Config, error) {
+func initialize(_ context.Context, input GlobalFlags) (*backend.Config, error) {
 	// Configure the logger
 	var programLevel = new(slog.LevelVar)
 	h := slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: programLevel})
 	slog.SetDefault(slog.New(h))
-	if debug {
+	if input.debug {
 		programLevel.Set(slog.LevelDebug)
 		slog.Debug("Debug mode enabled")
 	}
+	slog.Debug("Global flags", "flags", input)
 
 	// Initialize the configuration directory
-	if err := os.MkdirAll(configDir, 0755); err != nil {
+	if err := os.MkdirAll(input.configDir, 0755); err != nil {
 		return nil, err
 	}
 
 	config := &backend.Config{}
-	config.ConfigDir = configDir
+	config.ConfigDir = input.configDir
 
 	// Initialize the resty client
 	restyClient := resty.New()
 	restyClient.SetContentLength(true)
 	restyClient.SetHeader("Content-Type", "application/json")
-	restyClient.SetDebug(debug)
+	restyClient.SetDebug(input.debug)
 	restyClient.SetTimeout(30 * time.Second)
 	config.RestyClient = restyClient
 
 	// Initialize the redis client
 	redisClient := redis.NewClient(&redis.Options{
-		Addr: redisAddr,
+		Addr: input.redisAddress,
 	})
 	config.RedisClient = redisClient
 
 	// Initialize the publisher
-	config.Publisher = backend.NewPublisher(redisAddr, Prefix)
+	prefix := Prefix
+	if len(input.redisPrefix) > 0 {
+		prefix = input.redisPrefix + ":" + prefix
+	}
+	config.Publisher = backend.NewPublisher(input.redisAddress, prefix)
 
 	// Initialize the NATS client
-	natsPublisher, err := backend.NewNATSPublisher(natsAddr)
+	natsPublisher, err := backend.NewNATSPublisher(input.natsAddress, input.natsPrefix)
 	if err != nil {
 		// Disable NATS publisher if it fails to initialize
 		slog.Warn("Failed to initialize NATS publisher", "error", err)

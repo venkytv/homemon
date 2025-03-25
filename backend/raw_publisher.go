@@ -42,6 +42,6 @@ func (p *RawPublisher) Publish(ctx context.Context, metric RawMetric) error {
 		return err
 	}
 
-	name := p.natsPrefix + metric.Name
+	name := p.natsPrefix + metric.Name + "." + metric.Location
 	return p.natsClient.Publish(name, data)
 }
